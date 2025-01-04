@@ -13,6 +13,7 @@ export const generateTokenAndSetCookie = async (res, userId) => {
       maxMage: 7 * 24 * 60 * 60 * 1000,
     });
     // token
+    return token;
   } catch (error) {
     console.error("FAILED TO GENERATE TOKEN", error.message);
     return res.status(400).json({

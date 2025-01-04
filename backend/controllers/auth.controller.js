@@ -1,5 +1,6 @@
 import { User } from "../models/User.model.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
+import { sendVerificationEmail } from "../mailtrap/emails.js";
 import bcrypt from "bcryptjs";
 export const signup = async (req, res) => {
   try {
@@ -29,6 +30,8 @@ export const signup = async (req, res) => {
 
     // JWT(쿠키에 JWT 발행해주기)
     generateTokenAndSetCookie(res, newUser._id);
+    // E-mail verification
+    await sendVerificationEmail(newUser.email, verificationToken);
     // 응답으로 보낼때는 Password 가리고 보내주기
     return res.status(201).json({
       message: "New User has been created",
