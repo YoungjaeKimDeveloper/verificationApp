@@ -1,7 +1,9 @@
 import { User } from "../models/User.model.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import { sendVerificationEmail, sendWelcomeEmail } from "../mailtrap/emails.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+
 export const signup = async (req, res) => {
   try {
     // 유저로부터 정보 받아오기
@@ -20,6 +22,7 @@ export const signup = async (req, res) => {
     const verificationToken = Math.floor(
       100000 + Math.random() * 900000
     ).toString();
+
     const newUser = await User.create({
       email: email,
       name: name,
@@ -42,7 +45,7 @@ export const signup = async (req, res) => {
     });
   } catch (error) {
     console.error(`FAILED TO SIGN UP: ❌${error?.message}`);
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
       message: `Failed to Sign up : ${error?.message}`,
     });
@@ -50,7 +53,9 @@ export const signup = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
+  // Verify with sent code
   const { code } = req.body;
+  // 이 code를 가진 User를 찾으면 그걸로 verify되는거임
   try {
     const user = await User.findOne({
       verificationToken: code,
@@ -62,19 +67,68 @@ export const verifyEmail = async (req, res) => {
         message: "Invalid or expired verification code",
       });
     }
-    user.isVerified = true;
     // After update the uesr;s verification
+    user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiresAt = undefined;
     // Save the data base
     await user.save();
     // Send Welcome Email
-    await sendWelcomeEmail(user.email, user.name);
-
-    await sendWelcomeEmail(user.email, user.name);
+    // await sendWelcomeEmail(user.email, user.name);
+    return res
+      .status(200)
+      .json({ success: true, message: "Succeed in verifying Email Token" });
   } catch (error) {}
 };
 
-export const login = async () => {};
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+  // SEND THE RESPONSE TO THE FRONT-END
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "PLEASE FILL UP THE ALL FORMS" });
+  }
+  // FIND THE USER
+  const user = await User.findOne({ email: email });
+  if (!user) {
+    return res
+      .status(400)
+      .json({ success: false, message: "CANNOT FIND THE USER" });
+  }
+  // Compare(PlainText,hashedPassword)
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  if (!isPasswordCorrect) {
+    return res.status(400).json({ success: false, message: "INVALID ACCESS" });
+  }
+  generateTokenAndSetCookie(res, user._id);
+  user.lastLogin = Date.now();
+  await user.save();
+  return res.status(200).json({
+    success: true,
+    message: `WELCOME ${user.name}`,
+    user: {
+      ...user.doc,
+      password: undefined,
+    },
+  });
+};
 
-export const logout = async () => {};
+export const logout = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res
+        .status(400)
+        .json({ success: false, message: "NO USER TO LOGOUT" });
+    }
+    res.clearCookie("token");
+    return res.status(200).json({ succesS: true, message: "User Logout ✅" });
+  } catch (error) {
+    console.error("FAILED TO LOGOUT ❌", error.message);
+    return res.status(500).json({
+      success: false,
+      message: `FAILED TO LOGOUT ❌ ${error.message}`,
+    });
+  }
+};

@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { MailtrapClient } from "mailtrap";
 dotenv.config({ path: "/Users/youngjaekim/Desktop/verification_App/.env" });
 
+// mailtrapClient
 export const mailtrapClient = new MailtrapClient({
   token: process.env.MailTrapToken,
 });
@@ -16,6 +17,7 @@ export const sender = {
 //   },
 // ];
 
+// mailtrapClient
 // client
 //   .send({
 //     from: sender,
