@@ -1,14 +1,37 @@
 import jwt from "jsonwebtoken";
-
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 // Local Package
 import { User } from "../models/User.model.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import {
   sendVerificationEmail,
-  sendWelcomeEmail,
+  sendSuccessEmail,
   sendResetPasswordCode,
 } from "../mailtrap/emails.js";
+
+export const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      user: user,
+    });
+  } catch (error) {
+    console.error("FAILE TO check AUTH", error.message);
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: `FAILED TO CHECKAUTH ${error.message}`,
+      });
+  }
+};
 
 export const signup = async (req, res) => {
   try {
@@ -172,6 +195,39 @@ export const forgotPassword = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: `Failed To send ForgotPassword ❌  ${error.message}`,
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpireAt: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "CANNOT FIND THE USER" });
+    }
+    // update Password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpireAt = undefined;
+    await user.save();
+    await sendSuccessEmail(user.email);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "USER PASSWORD HAS BEEN UPDATED" });
+  } catch (error) {
+    console.error("FAILED TO UPDATED PASSWORD", error.message);
+    return res.status(500).json({
+      success: false,
+      message: `FAILED TO UPDATE PROFILE : ${error.message}`,
     });
   }
 };

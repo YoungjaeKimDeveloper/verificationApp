@@ -2,6 +2,7 @@ import { mailtrapClient, sender } from "./mailtrap.config.js";
 import {
   VERIFICATION_EMAIL_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
+  PASSWORD_RESET_SUCCESS_TEMPLATE,
 } from "./emailTemplates.js";
 
 export const sendVerificationEmail = async (email, verificationToken) => {
@@ -52,6 +53,21 @@ export const sendResetPasswordCode = async (email, resetURL) => {
       subject: "Reset Code!",
       html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
       category: "Password Verification",
+    });
+  } catch (error) {
+    console.error("FAILED TO SEND resetPasswordEmail ", error.message);
+  }
+};
+
+export const sendSuccessEmail = async (email) => {
+  try {
+    const recipients = [{ email: email }];
+    mailtrapClient.send({
+      from: sender,
+      to: recipients,
+      subject: "PASSWORD HAS BEEN RESETED",
+      html: PASSWORD_RESET_SUCCESS_TEMPLATE,
+      category: "PASSWORD HAS BEEN RESETED",
     });
   } catch (error) {
     console.error("FAILED TO SEND resetPasswordEmail ", error.message);
