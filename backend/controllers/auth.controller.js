@@ -1,8 +1,14 @@
+import jwt from "jsonwebtoken";
+
+import crypto from "crypto";
+// Local Package
 import { User } from "../models/User.model.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
-import { sendVerificationEmail, sendWelcomeEmail } from "../mailtrap/emails.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendResetPasswordCode,
+} from "../mailtrap/emails.js";
 
 export const signup = async (req, res) => {
   try {
@@ -129,6 +135,43 @@ export const logout = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: `FAILED TO LOGOUT ❌ ${error.message}`,
+    });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "PLEASE WRITE THE EMAIL" });
+    }
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "CANNOT FIND THE USER" });
+    }
+    // Generate reset Token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpireAt = Date.now() + 1000 * 60 * 60 * 1; // 1hour
+    await user.save();
+    // Send Email
+    const localAddress = process.env.Local_URL;
+    await sendResetPasswordCode(
+      user.email,
+      `${localAddress}/reset-password/${resetToken}`
+    );
+    return res
+      .status(200)
+      .json({ success: true, message: "SENDING ForgotPassword ✅" });
+  } catch (error) {
+    console.error("FAILED TO SEND ForotPassword Code ❌");
+    return res.status(400).json({
+      success: false,
+      message: `Failed To send ForgotPassword ❌  ${error.message}`,
     });
   }
 };
