@@ -6,6 +6,7 @@ import FloatingShape from "./components/FloatingShape";
 import HomePage from "../pages/Homepage";
 import SignupPage from "../pages/SignupPage";
 import LoginPage from "../pages/LoginPage";
+import EmailVerificationPage from "../pages/EmailVerificationPage";
 
 const App = () => {
   return (
@@ -35,6 +36,7 @@ const App = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/email-verification" element={<EmailVerificationPage />} />
       </Routes>
     </div>
   );
