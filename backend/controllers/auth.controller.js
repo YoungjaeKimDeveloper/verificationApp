@@ -83,12 +83,17 @@ export const signup = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
+  console.error("=====VERIFY EMAIL CALLED======");
+  const { verificaionCode } = req.body;
+  console.error("요청받은 데이터", req.body);
+  console.error("VERIFY EMAIL CALLED");
   // Verify with sent code
-  const { code } = req.body;
+
+  console.info("VERIFY CODE IN BACKEND", verificaionCode);
   // 이 code를 가진 User를 찾으면 그걸로 verify되는거임
   try {
     const user = await User.findOne({
-      verificationToken: code,
+      verificationToken: verificaionCode,
       verificationTokenExpiresAt: { $gt: Date.now() },
     });
     if (!user) {
@@ -108,7 +113,12 @@ export const verifyEmail = async (req, res) => {
     return res
       .status(200)
       .json({ success: true, message: "Succeed in verifying Email Token" });
-  } catch (error) {}
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Failed to verify Email Token ${error.message}`,
+    });
+  }
 };
 
 export const login = async (req, res) => {
