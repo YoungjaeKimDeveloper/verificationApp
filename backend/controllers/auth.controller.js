@@ -24,19 +24,19 @@ export const checkAuth = async (req, res) => {
     });
   } catch (error) {
     console.error("FAILE TO check AUTH", error.message);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: `FAILED TO CHECKAUTH ${error.message}`,
-      });
+    return res.status(500).json({
+      success: false,
+      message: `FAILED TO CHECKAUTH ${error.message}`,
+    });
   }
 };
 
 export const signup = async (req, res) => {
+  console.log("요청받은 데이터");
+  console.log(req.body);
   try {
     // 유저로부터 정보 받아오기
-    const { email, password, name } = req.body;
+    const { email, name, password } = req.body;
     if (!email || !password || !name) {
       throw new Error("PLEASE FILL UP THE ALL FORMS ❌");
     }
@@ -64,6 +64,7 @@ export const signup = async (req, res) => {
     generateTokenAndSetCookie(res, newUser._id);
     // E-mail verification
     await sendVerificationEmail(newUser.email, verificationToken);
+
     // 응답으로 보낼때는 Password 가리고 보내주기
     return res.status(201).json({
       message: "New User has been created",

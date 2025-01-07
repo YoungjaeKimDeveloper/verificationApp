@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import FloatingShape from "./components/FloatingShape";
-
+import { Toaster } from "react-hot-toast";
 // Pages
 import HomePage from "../pages/Homepage";
 import SignupPage from "../pages/SignupPage";
@@ -38,6 +38,7 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/email-verification" element={<EmailVerificationPage />} />
       </Routes>
+      <Toaster />
     </div>
   );
 };
