@@ -7,36 +7,22 @@ import HomePage from "../pages/Homepage";
 import SignupPage from "../pages/SignupPage";
 import LoginPage from "../pages/LoginPage";
 import EmailVerificationPage from "../pages/EmailVerificationPage";
+import ForgotPassword from "../pages/ForgotPassword";
+import NotAccess from "../pages/NotAccess";
 // Auth
 import { authStore } from "../store/authStore";
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, user } = authStore();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  console.log("IS USER VERIFIED?", user?.isVerified);
-  if (!user?.isVerified) {
-    return <Navigate to="/email-verification" />;
-  }
-  return children;
-};
-
-const getEmailVerificationElement = () => {
-  if (!user) return <Navigate to="/login" replace />;
-  if (!user.isVerified) return <Navigate to="email-verification" />;
-  return <Navigate to="/" replace />;
-};
-
 const App = () => {
   const { isCheckingAuth, checkAuth, user, isAuthenticated } = authStore();
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
   if (isCheckingAuth) {
     return <div>Loading...</div>;
   }
+  console.log("유저", user);
   return (
     <div className="min-h-screen w-screen bg-gradient-to-r from-green-100 to-green-300 flex items-center justify-center">
       <FloatingShape
@@ -64,17 +50,16 @@ const App = () => {
       <Routes>
         <Route
           path="/"
-          element={user ? <HomePage /> : <Navigate to="login" />}
+          element={user ? <HomePage /> : <Navigate to="/login" replace />}
         />
         <Route
           path="/Signup"
-          element={!user ? <SignupPage /> : <Navigate to="/" />}
+          element={!user ? <SignupPage /> : <Navigate to="/" replace />}
         />
-        <Route path="/login" element={!user ? <LoginPage /> : <HomePage />} />
-        {/* <Route
-          path="/email-verification"
-          element={getEmailVerificationElement}
-        /> */}
+        <Route
+          path="/login"
+          element={!user ? <LoginPage /> : <Navigate to="/" replace />}
+        />
         <Route
           path="/email-verification"
           element={
@@ -83,9 +68,13 @@ const App = () => {
             ) : !user?.isVerified ? (
               <EmailVerificationPage />
             ) : (
-              <Navigate to="/login" />
+              <Navigate to="/login" replace />
             )
           }
+        />
+        <Route
+          path="/forgot-password"
+          element={user ? <ForgotPassword /> : <NotAccess />}
         />
       </Routes>
       <Toaster />

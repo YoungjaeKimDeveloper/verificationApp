@@ -88,8 +88,8 @@ export const authStore = create((set, get) => ({
     try {
       set({ isCheckingAuth: true });
       const res = await axiosInstance.get("/check-auth");
-      set({ isAuthenticated: true });
       set({ user: res.data.user });
+      set({ isAuthenticated: true });
     } catch (error) {
       set({ error: error?.response?.data?.message || "Failed to cehckaUth" });
       set({ isAuthenticated: false });
