@@ -158,11 +158,7 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const token = req.cookies.token;
-    if (!token) {
-      return res
-        .status(400)
-        .json({ success: false, message: "NO USER TO LOGOUT" });
-    }
+
     res.clearCookie("token");
     return res.status(200).json({ succesS: true, message: "User Logout ✅" });
   } catch (error) {

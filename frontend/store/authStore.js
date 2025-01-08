@@ -10,9 +10,12 @@ export const authStore = create((set, get) => ({
   isSignupLoading: false,
   isCheckingVerification: false,
   isCheckingAuth: false,
+  isLogoutLoading: false,
   //  State - Error
   error: null,
+  logoutError: null,
   //  Action
+
   signup: async (data) => {
     try {
       set({ isSignupLoading: true });
@@ -47,6 +50,18 @@ export const authStore = create((set, get) => ({
       toast.error("FAILED TO LOGIN");
     }
   },
+  logout: async () => {
+    try {
+      set({ isLogoutLoading: true });
+      await axiosInstance.post("/logout");
+      set({ user: null });
+    } catch (error) {
+      set({ logoutError: error.message });
+    } finally {
+      set({ isLogoutLoading: false });
+    }
+  },
+
   // Verification
   verifyCode: async (verificaionCode) => {
     try {

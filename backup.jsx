@@ -7,7 +7,6 @@ import HomePage from "../pages/Homepage";
 import SignupPage from "../pages/SignupPage";
 import LoginPage from "../pages/LoginPage";
 import EmailVerificationPage from "../pages/EmailVerificationPage";
-// Auth
 import { authStore } from "../store/authStore";
 
 const ProtectedRoute = ({ children }) => {
@@ -23,10 +22,13 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const getEmailVerificationElement = () => {
-  if (!user) return <Navigate to="/login" replace />;
-  if (!user.isVerified) return <Navigate to="email-verification" />;
-  return <Navigate to="/" replace />;
+const RedirectAuthenticatedUser = ({ children }) => {
+  const { isAuthenticated, user } = authStore();
+  // if (isAuthenticated && user.isVerified) {
+  //   return <Navigate to="/" replace />;
+  // }
+
+  return children;
 };
 
 const App = () => {
@@ -60,33 +62,32 @@ const App = () => {
         left="-10%"
         delay={2}
       />
-      {/* Setting Routes */}
       <Routes>
         <Route
           path="/"
-          element={user ? <HomePage /> : <Navigate to="login" />}
-        />
-        <Route
-          path="/Signup"
-          element={!user ? <SignupPage /> : <Navigate to="/" />}
-        />
-        <Route path="/login" element={!user ? <LoginPage /> : <HomePage />} />
-        {/* <Route
-          path="/email-verification"
-          element={getEmailVerificationElement}
-        /> */}
-        <Route
-          path="/email-verification"
           element={
-            !user ? (
-              <Navigate to="/" />
-            ) : !user?.isVerified ? (
-              <EmailVerificationPage />
-            ) : (
-              <Navigate to="/login" />
-            )
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
           }
         />
+        <Route
+          path="/signup"
+          element={
+            <RedirectAuthenticatedUser>
+              <SignupPage />
+            </RedirectAuthenticatedUser>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <RedirectAuthenticatedUser>
+              <LoginPage />
+            </RedirectAuthenticatedUser>
+          }
+        />
+        <Route path="/email-verification" element={<EmailVerificationPage />} />
       </Routes>
       <Toaster />
     </div>
