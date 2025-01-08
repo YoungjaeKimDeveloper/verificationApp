@@ -2,13 +2,14 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axiosInstance";
 import { create } from "zustand";
 
-export const authStore = create((set) => ({
+export const authStore = create((set, get) => ({
   // State
   user: null,
   // State - Loading
   isAuthenticated: false,
   isSignupLoading: false,
   isCheckingVerification: false,
+  isCheckingAuth: false,
   //  State - Error
   error: null,
   //  Action
@@ -32,13 +33,27 @@ export const authStore = create((set) => ({
       set({ isSignupLoading: false });
     }
   },
+  // Login
+  login: async (data) => {
+    try {
+      const res = await axiosInstance.post("/login", data);
+      set({ user: res.data.user });
+      set({ isAuthenticated: true });
+      toast.success("USER LOGGINED ✅");
+    } catch (error) {
+      set({ user: null });
+      set({ isAuthenticated: false });
+      console.error("FAILED TO LOGIN IN ❌", error?.response);
+      toast.error("FAILED TO LOGIN");
+    }
+  },
+  // Verification
   verifyCode: async (verificaionCode) => {
-    console.log("verificaionCode IN ZUSTAND", verificaionCode);
-    const res = await axiosInstance.post("/verify-email", { verificaionCode });
-    console.log(res.data);
     try {
       set({ isCheckingVerification: true });
-      const res = await axiosInstance.post("/verify-email", verificaionCode);
+      const res = await axiosInstance.post("/verify-email", {
+        verificaionCode,
+      });
       if (res.data.success === 200) {
         toast.success("Pass the Email Token Successfully");
       }
@@ -52,6 +67,20 @@ export const authStore = create((set) => ({
       return false;
     } finally {
       set({ isCheckingVerification: false });
+    }
+  },
+  checkAuth: async () => {
+    try {
+      set({ isCheckingAuth: true });
+      const res = await axiosInstance.get("/check-auth");
+      set({ isAuthenticated: true });
+      set({ user: res.data.user });
+    } catch (error) {
+      set({ error: error?.response?.data?.message || "Failed to cehckaUth" });
+      set({ isAuthenticated: false });
+      set({ user: null });
+    } finally {
+      set({ isCheckingAuth: false });
     }
   },
 }));

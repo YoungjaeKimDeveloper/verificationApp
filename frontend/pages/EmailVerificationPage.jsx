@@ -51,7 +51,6 @@ const EmailVerificationPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const verificationCode = code.join("");
-    console.log("Verification Code FROM CLIENT",verificationCode);
     try {
       const res = await verifyCode(verificationCode);
       if (res) {

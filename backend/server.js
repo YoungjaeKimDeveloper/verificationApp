@@ -24,4 +24,3 @@ app.listen(PORT, () => {
   connectDB();
   console.info(`SERVER IS RUNNING ${PORT}`);
 });
-2;

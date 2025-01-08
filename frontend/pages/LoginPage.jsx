@@ -2,14 +2,21 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Input from "../src/components/Input";
 import { Mail, Lock, Loader } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { authStore } from "../store/authStore";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const handleLogin = (e) => {
+  const navigate = useNavigate();
+  // AuthStore
+  const { login } = authStore();
+  const handleLogin = async (e) => {
     e.preventDefault();
+    await login({ email, password });
+    navigate("/");
   };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

@@ -8,6 +8,7 @@ import {
   sendVerificationEmail,
   sendSuccessEmail,
   sendResetPasswordCode,
+  sendWelcomeEmail,
 } from "../mailtrap/emails.js";
 
 export const checkAuth = async (req, res) => {
@@ -32,8 +33,6 @@ export const checkAuth = async (req, res) => {
 };
 
 export const signup = async (req, res) => {
-  console.log("요청받은 데이터");
-  console.log(req.body);
   try {
     // 유저로부터 정보 받아오기
     const { email, name, password } = req.body;
@@ -83,12 +82,8 @@ export const signup = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
-  console.error("=====VERIFY EMAIL CALLED======");
   const { verificaionCode } = req.body;
-  console.error("요청받은 데이터", req.body);
-  console.error("VERIFY EMAIL CALLED");
   // Verify with sent code
-
   console.info("VERIFY CODE IN BACKEND", verificaionCode);
   // 이 code를 가진 User를 찾으면 그걸로 verify되는거임
   try {
@@ -108,6 +103,7 @@ export const verifyEmail = async (req, res) => {
     user.verificationTokenExpiresAt = undefined;
     // Save the data base
     await user.save();
+    await sendWelcomeEmail(user.email, user.name);
     // Send Welcome Email
     // await sendWelcomeEmail(user.email, user.name);
     return res
@@ -122,36 +118,41 @@ export const verifyEmail = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-  // SEND THE RESPONSE TO THE FRONT-END
-  if (!email || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: "PLEASE FILL UP THE ALL FORMS" });
+  try {
+    const { email, password } = req.body;
+    // SEND THE RESPONSE TO THE FRONT-END
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "PLEASE FILL UP THE ALL FORMS" });
+    }
+    // FIND THE USER
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "CANNOT FIND THE USER" });
+    }
+    // Compare(PlainText,hashedPassword)
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordCorrect) {
+      return res
+        .status(400)
+        .json({ success: false, message: "INVALID ACCESS" });
+    }
+    generateTokenAndSetCookie(res, user._id);
+    user.lastLogin = Date.now();
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: `WELCOME ${user.name}`,
+      user: user,
+    });
+  } catch (error) {
+    console.error("FAILED TO LOGIN", error.response.data.message);
   }
-  // FIND THE USER
-  const user = await User.findOne({ email: email });
-  if (!user) {
-    return res
-      .status(400)
-      .json({ success: false, message: "CANNOT FIND THE USER" });
-  }
-  // Compare(PlainText,hashedPassword)
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
-  if (!isPasswordCorrect) {
-    return res.status(400).json({ success: false, message: "INVALID ACCESS" });
-  }
-  generateTokenAndSetCookie(res, user._id);
-  user.lastLogin = Date.now();
-  await user.save();
-  return res.status(200).json({
-    success: true,
-    message: `WELCOME ${user.name}`,
-    user: {
-      ...user.doc,
-      password: undefined,
-    },
-  });
 };
 
 export const logout = async (req, res) => {

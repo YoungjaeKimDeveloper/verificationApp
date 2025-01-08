@@ -5,12 +5,12 @@ export const generateTokenAndSetCookie = async (res, userId) => {
     const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
       expiresIn: "3d",
     });
-    // 쿠키통
+
     res.cookie("token", token, {
       httpOnly: true, //XSS
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxMage: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     // token
     return token;
