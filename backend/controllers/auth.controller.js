@@ -179,6 +179,7 @@ export const forgotPassword = async (req, res) => {
         .json({ success: false, message: "PLEASE WRITE THE EMAIL" });
     }
     const user = await User.findOne({ email: email });
+    console.log("USER FINDED: ", user);
     if (!user) {
       return res
         .status(400)
@@ -227,11 +228,11 @@ export const resetPassword = async (req, res) => {
     user.resetPasswordExpireAt = undefined;
     await user.save();
     await sendSuccessEmail(user.email);
-
     return res
       .status(200)
       .json({ success: true, message: "USER PASSWORD HAS BEEN UPDATED" });
   } catch (error) {
+    console.log(error);
     console.error("FAILED TO UPDATED PASSWORD", error.message);
     return res.status(500).json({
       success: false,

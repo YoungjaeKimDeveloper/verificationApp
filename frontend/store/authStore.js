@@ -11,10 +11,18 @@ export const authStore = create((set, get) => ({
   isCheckingVerification: false,
   isCheckingAuth: false,
   isLogoutLoading: false,
+  isForgotPasswordLoading: false,
+  isResetPasswordLoading: false,
   //  State - Error
   error: null,
   logoutError: null,
+  isResetPasswordLoadingMessage: null,
+  // State - Message
+  forgotPasswordMessage: null,
   //  Action
+  // resetPassword
+  resetPasswordMessage: null,
+  resetPasswordError: null,
 
   signup: async (data) => {
     try {
@@ -98,4 +106,47 @@ export const authStore = create((set, get) => ({
       set({ isCheckingAuth: false });
     }
   },
+  forgotPassword: async (email) => {
+    try {
+      set({ isForgotPasswordLoading: true });
+      const res = await axiosInstance.post(`/forgot-password`, { email });
+      set({
+        forgotPasswordMessage: res.data.message,
+        isForgotPasswordLoading: false,
+      });
+      console.info("SEND THE EMAIL SUCCESSFULLY ✅");
+    } catch (error) {
+      console.error(
+        "FAIL TO SEND FORGOT PASSWORD VERIFICATION EMAIL : ",
+        error?.response?.data?.message
+      );
+      set({
+        forgotPasswordMessage:
+          error?.response?.data?.message ||
+          "Error sending reset password email",
+      });
+    } finally {
+      set({
+        isForgotPasswordLoading: false,
+      });
+    }
+  },
+  // Focus
+  resetPassword: async (token, password) => {
+    set({ isResetPasswordLoading: true });
+    try {
+      const response = await axiosInstance.post(`/reset-password/${token}`, {
+        password,
+      });
+      set({ isResetPasswordLoading: false });
+      set({ resetPasswordMessage: response?.data?.message });
+    } catch (error) {
+      console.error("ERROR IN resetPassword", error?.resposne?.data?.message);
+      set({ resetPasswordError: error?.resposne?.data?.message });
+    } finally {
+      set({ isResetPasswordLoading: false });
+    }
+  },
 }));
+
+// resetPassword

@@ -8,6 +8,7 @@ import SignupPage from "../pages/SignupPage";
 import LoginPage from "../pages/LoginPage";
 import EmailVerificationPage from "../pages/EmailVerificationPage";
 import ForgotPassword from "../pages/ForgotPassword";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 import NotAccess from "../pages/NotAccess";
 // Auth
 import { authStore } from "../store/authStore";
@@ -72,10 +73,8 @@ const App = () => {
             )
           }
         />
-        <Route
-          path="/forgot-password"
-          element={user ? <ForgotPassword /> : <NotAccess />}
-        />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       </Routes>
       <Toaster />
     </div>
